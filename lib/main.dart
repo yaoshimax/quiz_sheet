@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:gsheets/gsheets.dart';
+
+const _credentials = r'''
+{
+}
+''';
+
+const _spreadsheetId = '';
 
 void main() {
   runApp(const MyApp());
@@ -10,6 +18,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final gsheets = GSheets(_credentials);
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -24,13 +33,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'QuizSheet', gsheets: gsheets),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({Key? key, required this.title, required this.gsheets}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -42,6 +51,7 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final GSheets gsheets;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -49,8 +59,16 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  int _ind = 1;
+  String _question = "tes";
+  String _answer = "ans";
 
-  void _incrementCounter() {
+  void _incrementCounter() async {
+    var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
+    var sheet = ss.worksheetByIndex(0);
+    _question = (await sheet?.values.value(column: _ind, row: 2))!;
+    _answer = (await sheet?.values.value(column: _ind, row: 3))!;
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -95,8 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            Text(
+              _question,
             ),
             Text(
               '$_counter',
