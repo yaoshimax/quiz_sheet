@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gsheets/gsheets.dart';
 import 'package:tuple/tuple.dart';
+import 'package:flip_card/flip_card.dart';
 
 const _credentials = r'''
 {
@@ -100,24 +101,41 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
-        child: FutureBuilder(
-            future: _getQandA(),
-            builder: (BuildContext context, AsyncSnapshot<Tuple2<String, String>> snapshot) {
-              var widgets = <Widget>[];
-              if (snapshot.connectionState != ConnectionState.done) {
-                widgets.add(const CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                widgets.add(Text(snapshot.error.toString()));
-              } else if (snapshot.hasData) {
-                widgets.addAll(<Widget>[
-                  Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline4),
-                  Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline4)
-                ]);
-              } else {
-                widgets.add(const Text("データ取得に失敗しました"));
-              }
-              return Column(mainAxisAlignment: MainAxisAlignment.center, children: widgets);
-            }),
+        child: Column(
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Invoke "debug painting" (press "p" in the console, choose the
+          // "Toggle Debug Paint" action from the Flutter Inspector in Android
+          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+          // to see the wireframe for each widget.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            FutureBuilder(
+                future: _getQandA(),
+                builder: (BuildContext context, AsyncSnapshot<Tuple2<String, String>> snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text(snapshot.error.toString());
+                  } else if (snapshot.hasData) {
+                    return FlipCard(
+                        direction: FlipDirection.HORIZONTAL,
+                        front: Container(child: Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline4)),
+                        back: Container(child: Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline4)));
+                  } else {
+                    return const Text("データ取得に失敗しました");
+                  }
+                }),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
