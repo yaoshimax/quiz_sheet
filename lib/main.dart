@@ -92,6 +92,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    var _height = MediaQuery.of(context).size.height;
+    var _width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
@@ -128,8 +130,26 @@ class _MyHomePageState extends State<MyHomePage> {
                   } else if (snapshot.hasData) {
                     return FlipCard(
                         direction: FlipDirection.HORIZONTAL,
-                        front: Container(child: Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline4)),
-                        back: Container(child: Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline4)));
+                        front: Container(
+                            width: _width * 0.8,
+                            height: _height * 0.8,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white70,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(width: 1),
+                            ),
+                            child: Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline4)),
+                        back: Container(
+                            width: _width * 0.8,
+                            height: _height * 0.8,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white70,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(width: 1),
+                            ),
+                            child: Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline4)));
                   } else {
                     return const Text("データ取得に失敗しました");
                   }
