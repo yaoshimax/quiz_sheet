@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gsheets/gsheets.dart';
 import 'package:tuple/tuple.dart';
 import 'package:flip_card/flip_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 const _credentials = r'''
 {
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
         primarySwatch: Colors.blue,
+        textTheme: GoogleFonts.sawarabiGothicTextTheme(Theme.of(context).textTheme),
       ),
       home: MyHomePage(title: 'QuizSheet', gsheets: gsheets),
     );
