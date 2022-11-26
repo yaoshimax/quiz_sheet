@@ -78,6 +78,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final durations = <Duration>[
+    const Duration(hours: 1),
+    const Duration(hours: 3),
+    const Duration(hours: 10),
+    const Duration(days: 1),
+    const Duration(days: 3),
+    const Duration(days: 10),
+    const Duration(days: 30),
+    const Duration(days: 90),
+    const Duration(days: 180),
+    const Duration(days: 365),
+  ];
+
   int _ind = -1;
   Future<Tuple2<String, String>> _getQandA() async {
     var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
@@ -88,14 +101,17 @@ class _MyHomePageState extends State<MyHomePage> {
     var now = DateTime.now();
     for (int i = 0; i < size; i++) {
       if (i == _ind) continue;
-      print(rows[i][3]);
-      var currentDate = dateFromGsheets(rows[i][3]);
-      if (currentDate.isAfter(now)) {
+      if (rows[i].length < 5) {
         candidateIndex.add(i);
+      } else {
+        var currentDate = dateFromGsheets(rows[i][4]);
+        if (currentDate.isBefore(now)) {
+          candidateIndex.add(i);
+        }
       }
     }
     if (candidateIndex.isEmpty) {
-      return Future.error("all not detected");
+      return Future.error("all quiz not detected");
     }
     candidateIndex.shuffle();
     _ind = candidateIndex[0];
@@ -107,9 +123,55 @@ class _MyHomePageState extends State<MyHomePage> {
   void _ok(int ind) async {
     var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
     var sheet = ss.worksheetByIndex(0);
-    var targetCell = await sheet!.cells.cell(column: 3, row: ind + 2);
+    var correctCell = await sheet!.cells.cell(column: 3, row: ind + 2);
+
+    var targetCell = await sheet.cells.cell(column: 4, row: ind + 2);
+    var thresholdCell = await sheet.cells.cell(column: 5, row: ind + 2);
+    var i = 0;
+    if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
+      var before = dateFromGsheets(targetCell.value);
+      var after = dateFromGsheets(thresholdCell.value);
+      var dur = after.difference(before);
+      for (i = 0; i < durations.length; i++) {
+        if (dur * 1.1 <= durations[i]) {
+          break;
+        }
+      }
+    }
     var now = DateTime.now();
+    var next = now.add(durations[i]);
+    await correctCell.post(now);
     await targetCell.post(now);
+    await thresholdCell.post(next);
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+    });
+  }
+
+  void _ng(int ind) async {
+    var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
+    var sheet = ss.worksheetByIndex(0);
+    var targetCell = await sheet!.cells.cell(column: 4, row: ind + 2);
+    var thresholdCell = await sheet.cells.cell(column: 5, row: ind + 2);
+    var i = 0;
+    if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
+      var before = dateFromGsheets(targetCell.value);
+      var after = dateFromGsheets(thresholdCell.value);
+      var dur = after.difference(before);
+      for (i = 0; i < durations.length; i++) {
+        if (dur * 0.9 <= durations[i]) {
+          break;
+        }
+      }
+    }
+    var now = DateTime.now();
+    var next = now.add(durations[i]);
+    await targetCell.post(now);
+    await thresholdCell.post(next);
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
@@ -204,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(width: 10),
             FloatingActionButton(
               heroTag: 'ng',
-              onPressed: () => _ok(_ind),
+              onPressed: () => _ng(_ind),
               tooltip: 'Increment',
               child: const Icon(Icons.not_interested_sharp),
             ),
