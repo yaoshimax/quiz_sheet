@@ -189,90 +189,76 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    var _height = MediaQuery.of(context).size.height;
-    var _width = MediaQuery.of(context).size.width;
+    var height = MediaQuery.of(context).size.height;
+    var width = MediaQuery.of(context).size.width;
     return Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
-        ),
-        body: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug painting" (press "p" in the console, choose the
-            // "Toggle Debug Paint" action from the Flutter Inspector in Android
-            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-            // to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              FutureBuilder(
-                  future: _getQandA(),
-                  builder: (BuildContext context, AsyncSnapshot<Tuple2<String, String>> snapshot) {
-                    if (snapshot.connectionState != ConnectionState.done) {
-                      return const CircularProgressIndicator();
-                    } else if (snapshot.hasError) {
-                      return Text(snapshot.error.toString());
-                    } else if (snapshot.hasData) {
-                      return FlipCard(
-                          direction: FlipDirection.HORIZONTAL,
-                          front: Container(
-                              width: _width * 0.8,
-                              height: _height * 0.8,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white70,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(width: 1),
-                              ),
-                              child: Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline5)),
-                          back: Container(
-                              width: _width * 0.8,
-                              height: _height * 0.8,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white70,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(width: 1),
-                              ),
-                              child: Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline5)));
-                    } else {
-                      return const Text("データ取得に失敗しました");
-                    }
-                  }),
-            ],
-          ),
-        ),
-        floatingActionButton: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FloatingActionButton(
-              heroTag: 'ng',
-              onPressed: () => _ok(_ind),
-              tooltip: 'Increment',
-              child: const Icon(Icons.done),
-            ),
-            const SizedBox(width: 10),
-            FloatingActionButton(
-              heroTag: 'ng',
-              onPressed: () => _ng(_ind),
-              tooltip: 'Increment',
-              child: const Icon(Icons.not_interested_sharp),
-            ),
-          ],
-        )
-        // This trailing comma makes auto-formatting nicer for build methods.
-        );
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
+      body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
+        child: FutureBuilder(
+            future: _getQandA(),
+            builder: (BuildContext context, AsyncSnapshot<Tuple2<String, String>> snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Column(mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[CircularProgressIndicator()]);
+              } else if (snapshot.hasError) {
+                return Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[Text(snapshot.error.toString())]);
+              } else if (snapshot.hasData) {
+                return Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                  FlipCard(
+                      direction: FlipDirection.HORIZONTAL,
+                      front: Container(
+                          width: width * 0.8,
+                          height: height * 0.8,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white70,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(width: 1),
+                          ),
+                          child: Text(snapshot.data!.item1, style: Theme.of(context).textTheme.headline5)),
+                      back: Container(
+                          width: width * 0.8,
+                          height: height * 0.8,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white70,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(width: 1),
+                          ),
+                          child: Text(snapshot.data!.item2, style: Theme.of(context).textTheme.headline5))),
+                  const SizedBox(height: 5),
+                  Container(
+                    alignment: Alignment.bottomRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: () => _ok(_ind),
+                          style: TextButton.styleFrom(primary: Colors.white70, backgroundColor: Colors.blue, fixedSize: Size(width * 0.2, 50)),
+                          child: const Text("覚えてる"),
+                        ),
+                        const SizedBox(width: 10),
+                        TextButton(
+                          onPressed: () => _ng(_ind),
+                          style: TextButton.styleFrom(primary: Colors.white70, backgroundColor: Colors.blue, fixedSize: Size(width * 0.2, 50)),
+                          child: const Text("忘れた"),
+                        ),
+                        const SizedBox(width: 10),
+                      ],
+                    ),
+                  ),
+                ]);
+              } else {
+                return Column(mainAxisAlignment: MainAxisAlignment.center, children: const <Widget>[Text("データ取得に失敗しました")]);
+              }
+            }),
+      ),
+      // This trailing comma makes auto-formatting nicer for build methods.
+    );
   }
 }
