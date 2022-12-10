@@ -92,7 +92,55 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   int _ind = -1;
+  bool _ok = false;
+
   Future<Tuple2<String, String>> _getQandA() async {
+    if (_ind != -1) {
+      if (_ok) {
+        var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
+        var sheet = ss.worksheetByIndex(0);
+        var correctCell = await sheet!.cells.cell(column: 3, row: _ind + 2);
+
+        var targetCell = await sheet.cells.cell(column: 4, row: _ind + 2);
+        var thresholdCell = await sheet.cells.cell(column: 5, row: _ind + 2);
+        var i = 0;
+        if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
+          var before = dateFromGsheets(targetCell.value);
+          var after = dateFromGsheets(thresholdCell.value);
+          var dur = after.difference(before);
+          for (i = 0; i < durations.length; i++) {
+            if (dur * 1.1 <= durations[i]) {
+              break;
+            }
+          }
+        }
+        var now = DateTime.now();
+        var next = now.add(durations[i]);
+        await correctCell.post(now);
+        await targetCell.post(now);
+        await thresholdCell.post(next);
+      } else {
+        var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
+        var sheet = ss.worksheetByIndex(0);
+        var targetCell = await sheet!.cells.cell(column: 4, row: _ind + 2);
+        var thresholdCell = await sheet.cells.cell(column: 5, row: _ind + 2);
+        var i = 0;
+        if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
+          var before = dateFromGsheets(targetCell.value);
+          var after = dateFromGsheets(thresholdCell.value);
+          var dur = after.difference(before);
+          for (i = 0; i < durations.length; i++) {
+            if (dur * 0.9 <= durations[i]) {
+              break;
+            }
+          }
+        }
+        var now = DateTime.now();
+        var next = now.add(durations[i]);
+        await targetCell.post(now);
+        await thresholdCell.post(next);
+      }
+    }
     var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
     var sheet = ss.worksheetByIndex(0);
     var rows = await sheet!.values.allRows(fromRow: 2);
@@ -120,59 +168,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Future<Tuple2<String, String>>.value(Tuple2<String, String>(question, answer));
   }
 
-  void _ok(int ind) async {
-    var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
-    var sheet = ss.worksheetByIndex(0);
-    var correctCell = await sheet!.cells.cell(column: 3, row: ind + 2);
-
-    var targetCell = await sheet.cells.cell(column: 4, row: ind + 2);
-    var thresholdCell = await sheet.cells.cell(column: 5, row: ind + 2);
-    var i = 0;
-    if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
-      var before = dateFromGsheets(targetCell.value);
-      var after = dateFromGsheets(thresholdCell.value);
-      var dur = after.difference(before);
-      for (i = 0; i < durations.length; i++) {
-        if (dur * 1.1 <= durations[i]) {
-          break;
-        }
-      }
-    }
-    var now = DateTime.now();
-    var next = now.add(durations[i]);
-    await correctCell.post(now);
-    await targetCell.post(now);
-    await thresholdCell.post(next);
+  void _update(bool ok) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-    });
-  }
-
-  void _ng(int ind) async {
-    var ss = await widget.gsheets.spreadsheet(_spreadsheetId);
-    var sheet = ss.worksheetByIndex(0);
-    var targetCell = await sheet!.cells.cell(column: 4, row: ind + 2);
-    var thresholdCell = await sheet.cells.cell(column: 5, row: ind + 2);
-    var i = 0;
-    if (thresholdCell.value.isNotEmpty && targetCell.value.isNotEmpty) {
-      var before = dateFromGsheets(targetCell.value);
-      var after = dateFromGsheets(thresholdCell.value);
-      var dur = after.difference(before);
-      for (i = 0; i < durations.length; i++) {
-        if (dur * 0.9 <= durations[i]) {
-          break;
-        }
-      }
-    }
-    var now = DateTime.now();
-    var next = now.add(durations[i]);
-    await targetCell.post(now);
-    await thresholdCell.post(next);
-    setState(() {
+      _ok = ok;
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
@@ -238,13 +236,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         TextButton(
-                          onPressed: () => _ok(_ind),
+                          onPressed: () => _update(true),
                           style: TextButton.styleFrom(primary: Colors.white70, backgroundColor: Colors.blue, fixedSize: Size(width * 0.2, 50)),
                           child: const Text("覚えてる"),
                         ),
                         const SizedBox(width: 10),
                         TextButton(
-                          onPressed: () => _ng(_ind),
+                          onPressed: () => _update(false),
                           style: TextButton.styleFrom(primary: Colors.white70, backgroundColor: Colors.blue, fixedSize: Size(width * 0.2, 50)),
                           child: const Text("忘れた"),
                         ),
